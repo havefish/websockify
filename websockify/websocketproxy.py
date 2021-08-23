@@ -101,6 +101,14 @@ Traffic Legend:
             msg += " (using SSL)"
         self.log_message(msg)
 
+        # parse self.path for vnc address in the query string
+        vs = parse_qs(urlparse(self.path).query).get('vnc', [])
+
+        # if found, replace the default values
+        # this approach has potential for race conditions, should be cleaned up after the POC
+        if vs:
+            self.server.target_host, self.server.target_port = vs[0].split(':')
+
         try:
             tsock = websockifyserver.WebSockifyServer.socket(self.server.target_host,
                                                            self.server.target_port,
