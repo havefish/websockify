@@ -518,6 +518,12 @@ def websockify_init():
                       help="Use the old syslog protocol instead of RFC 5424. "
                            "Use this if the messages produced by websockify seem abnormal.")
 
+    parser.add_option("--listen-host", default="localhost")
+    parser.add_option("--listen-port", type=int, default=6080)
+
+    parser.add_option("--target-host", default="localhost")
+    parser.add_option("--target-port", type=int, default=5900)
+
     (opts, args) = parser.parse_args()
 
 
@@ -610,48 +616,19 @@ def websockify_init():
         opts.wrap_cmd = None
 
     if not websockifyserver.ssl and opts.ssl_target:
-        parser.error("SSL target requested and Python SSL module not loaded.");
+        parser.error("SSL target requested and Python SSL module not loaded.")
 
     if opts.ssl_only and not os.path.exists(opts.cert):
         parser.error("SSL only and %s not found" % opts.cert)
 
     if opts.inetd:
         opts.listen_fd = sys.stdin.fileno()
-    else:
-        if len(args) < 1:
-            parser.error("Too few arguments")
-        arg = args.pop(0)
-        # Parse host:port and convert ports to numbers
-        if arg.count(':') > 0:
-            opts.listen_host, opts.listen_port = arg.rsplit(':', 1)
-            opts.listen_host = opts.listen_host.strip('[]')
-        else:
-            opts.listen_host, opts.listen_port = '', arg
-
-        try:
-            opts.listen_port = int(opts.listen_port)
-        except ValueError:
-            parser.error("Error parsing listen port")
 
     del opts.inetd
 
     if opts.wrap_cmd or opts.unix_target or opts.token_plugin:
         opts.target_host = None
         opts.target_port = None
-    else:
-        if len(args) < 1:
-            parser.error("Too few arguments")
-        arg = args.pop(0)
-        if arg.count(':') > 0:
-            opts.target_host, opts.target_port = arg.rsplit(':', 1)
-            opts.target_host = opts.target_host.strip('[]')
-        else:
-            parser.error("Error parsing target")
-
-        try:
-            opts.target_port = int(opts.target_port)
-        except ValueError:
-            parser.error("Error parsing target port")
 
     if len(args) > 0 and opts.wrap_cmd == None:
         parser.error("Too many arguments")
